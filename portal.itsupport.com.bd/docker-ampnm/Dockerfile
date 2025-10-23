@@ -35,19 +35,8 @@ RUN a2ensite 000-default.conf
 # Update Apache to listen on 2266
 RUN echo "Listen 2266" >> /etc/apache2/ports.conf
 
-# Copy application files from the ampnm-app-source directory
-COPY ampnm-app-source/ /var/www/html/
-
-# Copy the entrypoint script from the build context root
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
-# Expose port 2266 (or whatever port your app runs on)
-EXPOSE 2266
+# Copy custom PHP configuration
+COPY php.ini /usr/local/etc/php/conf.d/custom-php.ini
 
 # Ensure the uploads directory exists and has correct permissions
 RUN mkdir -p /var/www/html/uploads/icons \
@@ -55,6 +44,25 @@ RUN mkdir -p /var/www/html/uploads/icons \
     mkdir -p /var/www/html/uploads/backups \
     && chown -R www-data:www-data /var/www/html/uploads \
     && chmod -R 775 /var/www/html/uploads
+
+# Ensure Apache log directory exists and is writable for PHP errors
+RUN mkdir -p /var/log/apache2 \
+    && chown -R www-data:www-data /var/log/apache2 \
+    && chmod -R 775 /var/log/apache2
+
+# Copy application files from the ampnm-app-source directory
+COPY ampnm-app-source/ /var/www/html/
+
+# Copy the entrypoint script from the build context root
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Set permissions for the web root
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Expose port 2266 (or whatever port your app runs on)
+EXPOSE 2266
 
 # Use the copied entrypoint script
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
