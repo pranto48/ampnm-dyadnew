@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     nmap \
-    mysql-client \
+    mariadb-client-compat \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
