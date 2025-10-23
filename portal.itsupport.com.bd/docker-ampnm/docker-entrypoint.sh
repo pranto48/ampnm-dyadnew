@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex # -x for debugging, -e for exit on error
 
 # Wait for MySQL to be ready
 echo "Waiting for MySQL to be ready..."
@@ -7,11 +7,9 @@ echo "Waiting for MySQL to be ready..."
 
 # Run database setup script
 echo "Running database setup script..."
-php /var/www/html/database_setup.php
+php /var/www/html/database_setup.php || { echo "ERROR: database_setup.php failed!"; exit 1; }
 
 # Check if license_setup.php needs to be run (if license key is not yet set)
-# We'll check the app_settings table for 'app_license_key'
-# This requires a direct PDO connection as functions.php might not be fully loaded yet.
 echo "Checking application license status..."
 LICENSE_KEY_SET=$(php -r "
     require_once '/var/www/html/config.php';
@@ -28,9 +26,7 @@ LICENSE_KEY_SET=$(php -r "
 ")
 
 if [ "$LICENSE_KEY_SET" = "false" ]; then
-    echo "Application license key not found. Redirecting to license setup page."
-    # We don't run license_setup.php directly here, as it's a web page.
-    # The application's bootstrap will handle the redirect to license_setup.php if the key is missing.
+    echo "Application license key not found. The application will redirect to license_setup.php."
 else
     echo "Application license key is already configured."
 fi

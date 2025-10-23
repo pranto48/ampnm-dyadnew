@@ -28,6 +28,13 @@ RUN apt-get update && apt-get install -y wget \
     && chmod +x /usr/local/bin/wait-for-it.sh \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy custom Apache configuration
+COPY apache-conf/000-default.conf /etc/apache2/sites-available/000-default.conf
+RUN a2ensite 000-default.conf
+
+# Update Apache to listen on 2266
+RUN echo "Listen 2266" >> /etc/apache2/ports.conf
+
 # Copy application files from the ampnm-app-source directory
 COPY ampnm-app-source/ /var/www/html/
 
@@ -41,11 +48,6 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Expose port 2266 (or whatever port your app runs on)
 EXPOSE 2266
-
-# Update Apache configuration to listen on 2266
-RUN echo "Listen 2266" >> /etc/apache2/ports.conf \
-    && sed -i -e 's/VirtualHost \*:80/VirtualHost \*:2266/g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i -e 's/VirtualHost \*:80/VirtualHost \*:2266/g' /etc/apache2/sites-enabled/000-default.conf
 
 # Ensure the uploads directory exists and has correct permissions
 RUN mkdir -p /var/www/html/uploads/icons \
