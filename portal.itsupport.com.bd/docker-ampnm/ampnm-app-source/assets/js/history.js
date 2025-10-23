@@ -1,4 +1,4 @@
-function initHistory() {
+function initPingHistory() {
     const API_URL = 'api.php';
     const historyChartCanvas = document.getElementById('historyChart');
     const historyTableBody = document.getElementById('historyTableBody');

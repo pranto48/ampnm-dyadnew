@@ -11,9 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <title>AMPNM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- Chart.js and Vis.js will be included on specific pages that need them -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -22,27 +20,27 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
-                    <a href="#/dashboard" class="flex items-center gap-2 text-white font-bold">
+                    <a href="dashboard.php" class="flex items-center gap-2 text-white font-bold">
                         <i class="fas fa-shield-halved text-cyan-400 text-2xl"></i>
                         <span>AMPNM</span>
                     </a>
                 </div>
                 <div class="hidden md:block">
                     <div id="main-nav" class="ml-10 flex items-baseline space-x-1">
-                        <!-- Navigation links now point to the SPA routes -->
-                        <a href="#/dashboard" class="nav-link"><i class="fas fa-tachometer-alt fa-fw mr-2"></i>Dashboard</a>
-                        <a href="#/devices" class="nav-link"><i class="fas fa-server fa-fw mr-2"></i>Devices</a>
-                        <a href="#/ping" class="nav-link"><i class="fas fa-wifi fa-fw mr-2"></i>Browser Ping</a>
-                        <a href="#/server-ping" class="nav-link"><i class="fas fa-desktop fa-fw mr-2"></i>Server Ping</a>
-                        <a href="#/status" class="nav-link"><i class="fas fa-network-wired fa-fw mr-2"></i>Network Status</a>
-                        <a href="#/scanner" class="nav-link"><i class="fas fa-search fa-fw mr-2"></i>Network Scanner</a>
-                        <a href="#/history" class="nav-link"><i class="fas fa-history fa-fw mr-2"></i>Ping History</a>
-                        <a href="#/map" class="nav-link"><i class="fas fa-project-diagram fa-fw mr-2"></i>Network Map</a>
-                        <a href="#/license" class="nav-link"><i class="fas fa-key fa-fw mr-2"></i>License</a>
-                        <a href="#/products" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Products</a>
+                        <!-- Navigation links now point to direct PHP files -->
+                        <a href="dashboard.php" class="nav-link"><i class="fas fa-tachometer-alt fa-fw mr-2"></i>Dashboard</a>
+                        <a href="devices.php" class="nav-link"><i class="fas fa-server fa-fw mr-2"></i>Devices</a>
+                        <a href="ping.php" class="nav-link"><i class="fas fa-wifi fa-fw mr-2"></i>Browser Ping</a>
+                        <a href="server_ping.php" class="nav-link"><i class="fas fa-desktop fa-fw mr-2"></i>Server Ping</a>
+                        <a href="network_status.php" class="nav-link"><i class="fas fa-network-wired fa-fw mr-2"></i>Network Status</a>
+                        <a href="network_scanner.php" class="nav-link"><i class="fas fa-search fa-fw mr-2"></i>Network Scanner</a>
+                        <a href="ping_history.php" class="nav-link"><i class="fas fa-history fa-fw mr-2"></i>Ping History</a>
+                        <a href="map.php" class="nav-link"><i class="fas fa-project-diagram fa-fw mr-2"></i>Network Map</a>
+                        <a href="license.php" class="nav-link"><i class="fas fa-key fa-fw mr-2"></i>License</a>
+                        <a href="products.php" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Products</a>
                         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                            <a href="#/users" class="nav-link"><i class="fas fa-users-cog fa-fw mr-2"></i>Users</a>
-                            <a href="#/maintenance" class="nav-link"><i class="fas fa-tools fa-fw mr-2"></i>Maintenance</a>
+                            <a href="users.php" class="nav-link"><i class="fas fa-users-cog fa-fw mr-2"></i>Users</a>
+                            <a href="maintenance.php" class="nav-link"><i class="fas fa-tools fa-fw mr-2"></i>Maintenance</a>
                         <?php endif; ?>
                         <a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt fa-fw mr-2"></i>Logout</a>
                     </div>

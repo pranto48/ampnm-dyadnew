@@ -1,4 +1,4 @@
-function initStatusLogs() {
+function initNetworkStatus() {
     const API_URL = 'api.php';
     let statusLogChart = null;
     let liveInterval = null;

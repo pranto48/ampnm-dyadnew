@@ -6,26 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     <script src="assets/js/shared.js"></script>
     
-    <!-- Modular Map Scripts -->
-    <script src="assets/js/map/config.js"></script>
-    <script src="assets/js/map/state.js"></script>
-    <script src="assets/js/map/api.js"></script>
-    <script src="assets/js/map/utils.js"></script>
-    <script src="assets/js/map/ui.js"></script>
-    <script src="assets/js/soundManager.js"></script>
-    <script src="assets/js/map/deviceManager.js"></script>
-    <script src="assets/js/map/mapManager.js"></script>
-    <script src="assets/js/map/network.js"></script>
-    <script src="assets/js/map.js"></script>
-    
-    <script src="assets/js/dashboard.js"></script>
-    <script src="assets/js/devices.js"></script>
-    <script src="assets/js/history.js"></script>
-    <script src="assets/js/users.js"></script>
-    <script src="assets/js/status_logs.js"></script>
-    <script src="assets/js/email_notifications.js"></script>
-    <script src="assets/js/licenses.js"></script>
-    
+    <!-- Individual page scripts will be included directly in their respective PHP files -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize Notyf for toast notifications
@@ -39,7 +20,16 @@
             ]
         });
 
-        // The rest of the initialization is now handled by the React application in src/main.tsx
+        // Highlight active navigation link
+        const currentPath = window.location.pathname.split('/').pop();
+        const navLinks = document.querySelectorAll('#main-nav .nav-link');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('bg-slate-700', 'text-cyan-400');
+            } else {
+                link.classList.remove('bg-slate-700', 'text-cyan-400');
+            }
+        });
     });
     </script>
 </body>
