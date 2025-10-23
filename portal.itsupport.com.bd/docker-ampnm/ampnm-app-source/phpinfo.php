@@ -29,16 +29,18 @@ if (!is_function_disabled('exec') && !is_function_disabled('shell_exec')) {
     echo '<h3>Ping Command Test:</h3>';
     echo '<p><strong>which ping:</strong> ';
     $which_ping = shell_exec('which ping 2>&1');
-    echo (strpos($which_ping, 'ping') !== false ? '<span style="color: green;">Found</span>' : '<span style="color: red;">Not Found</span>') . ' (Path: ' . htmlspecialchars($which_ping) . ')</p>';
+    $ping_found = (strpos((string)$which_ping, 'ping') !== false); // Cast to string to avoid deprecation
+    echo ($ping_found ? '<span style="color: green;">Found</span>' : '<span style="color: red;">Not Found</span>') . ' (Path: ' . htmlspecialchars((string)$which_ping) . ')</p>'; // Cast to string
 
     echo '<p><strong>ping -c 1 127.0.0.1:</strong> ';
     $ping_output = shell_exec('ping -c 1 127.0.0.1 2>&1');
-    echo (strpos($ping_output, '1 received') !== false ? '<span style="color: green;">Success</span>' : '<span style="color: red;">Failed</span>') . ' (Output: <pre>' . htmlspecialchars($ping_output) . '</pre>)</p>';
+    echo (strpos((string)$ping_output, '1 received') !== false ? '<span style="color: green;">Success</span>' : '<span style="color: red;">Failed</span>') . ' (Output: <pre>' . htmlspecialchars((string)$ping_output) . '</pre>)</p>'; // Cast to string
 
     echo '<h3>Nmap Command Test:</h3>';
     echo '<p><strong>which nmap:</strong> ';
     $which_nmap = shell_exec('which nmap 2>&1');
-    echo (strpos($which_nmap, 'nmap') !== false ? '<span style="color: green;">Found</span>' : '<span style="color: red;">Not Found</span>') . ' (Path: ' . htmlspecialchars($which_nmap) . ')</p>';
+    $nmap_found = (strpos((string)$which_nmap, 'nmap') !== false); // Cast to string
+    echo ($nmap_found ? '<span style="color: green;">Found</span>' : '<span style="color: red;">Not Found</span>') . ' (Path: ' . htmlspecialchars((string)$which_nmap) . ')</p>'; // Cast to string
 
 } else {
     echo '<p style="color: red;">`exec()` or `shell_exec()` are disabled. Command execution tests cannot be performed.</p>';
