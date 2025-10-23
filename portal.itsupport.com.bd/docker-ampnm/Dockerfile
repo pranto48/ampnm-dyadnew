@@ -1,9 +1,7 @@
 FROM php:8.2-apache
 
 # Install system dependencies
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    curl \
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
@@ -14,8 +12,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     libonig-dev \
     libxml2-dev \
     nmap \
-    default-mysql-client \
-    apt-transport-https \
+    mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
