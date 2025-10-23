@@ -55,12 +55,7 @@ try {
     message("Table 'users' checked/created successfully.");
 
     // Migration: Add 'role' column if it doesn't exist
-    function columnExists($pdo, $db, $table, $column) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?");
-        $stmt->execute([$db, $table, $column]);
-        return $stmt->fetchColumn() > 0;
-    }
-
+    // Using the columnExists function from db_helpers.php
     if (!columnExists($pdo, $dbname, 'users', 'role')) {
         $pdo->exec("ALTER TABLE `users` ADD COLUMN `role` ENUM('admin', 'user') DEFAULT 'user' NOT NULL AFTER `password`;");
         message("Migrated 'users' table: added 'role' column.");

@@ -24,3 +24,17 @@ function generateUuid() {
     $data[8] = chr(ord(ord($data[8]) & 0x3f | 0x80)); // set bits 6-7 to 10
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
+
+// Helper function to check if a column exists
+function columnExists($pdo, $db, $table, $column) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $stmt->execute([$db, $table, $column]);
+    return $stmt->fetchColumn() > 0;
+}
+
+// Helper function to check if an index exists
+function indexExists($pdo, $db, $table, $indexName) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?");
+    $stmt->execute([$db, $table, $indexName]);
+    return $stmt->fetchColumn() > 0;
+}
