@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
     nmap \
     iputils-ping \
     mariadb-client-compat \
+    libcurl-dev \
+    libexif-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
