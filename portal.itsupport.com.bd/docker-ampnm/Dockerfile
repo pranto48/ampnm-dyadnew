@@ -22,6 +22,12 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Enable Apache modules
 RUN a2enmod rewrite
 
+# Install wait-for-it.sh
+RUN apt-get update && apt-get install -y wget \
+    && wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -O /usr/local/bin/wait-for-it.sh \
+    && chmod +x /usr/local/bin/wait-for-it.sh \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy application files from the ampnm-app-source directory
 COPY ampnm-app-source/ /var/www/html/
 
