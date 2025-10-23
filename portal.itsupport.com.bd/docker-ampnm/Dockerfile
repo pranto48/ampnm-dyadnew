@@ -19,10 +19,8 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo_mysql zip intl opcache bcmath exif
 
-# Enable Apache modules
+# Enable Apache modules (rewrite is still needed)
 RUN a2enmod rewrite
-# Explicitly enable PHP module for Apache
-RUN a2enmod php8.2
 
 # Install wait-for-it.sh
 RUN apt-get update && apt-get install -y wget \
