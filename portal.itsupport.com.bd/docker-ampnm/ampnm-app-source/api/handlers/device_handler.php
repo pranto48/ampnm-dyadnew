@@ -1,7 +1,7 @@
 <?php
 // This file is included by api.php and assumes $pdo, $action, and $input are available.
 $current_user_id = $_SESSION['user_id'];
-$current_user_role = $_SESSION['role'] ?? 'user'; // Get current user's role
+$current_user_role = $_SESSION['role'] ?? 'read_user'; // Default to 'read_user'
 
 // Placeholder for email notification function
 function sendEmailNotification($pdo, $device, $oldStatus, $newStatus, $details) {
@@ -92,6 +92,11 @@ function logStatusChange($pdo, $deviceId, $oldStatus, $newStatus, $details) {
 
 switch ($action) {
     case 'import_devices':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can import devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check license allowance from session
             if (!$_SESSION['can_add_device']) {
@@ -164,7 +169,11 @@ switch ($action) {
         break;
 
     case 'check_all_devices_globally':
-        // All users can trigger a global check
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can perform global device checks.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("SELECT * FROM devices WHERE enabled = TRUE AND user_id = ? AND ip IS NOT NULL AND ip != '' AND type != 'box'");
             $stmt->execute([$current_user_id]);
@@ -218,7 +227,11 @@ switch ($action) {
         break;
 
     case 'ping_all_devices':
-        // All users can trigger a map-specific ping
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can ping all devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $map_id = $input['map_id'] ?? null;
             if (!$map_id) { http_response_code(400); echo json_encode(['error' => 'Map ID is required']); exit; }
@@ -280,7 +293,11 @@ switch ($action) {
         break;
 
     case 'check_device':
-        // All users can check a single device
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can check device status.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $deviceId = $input['id'] ?? 0;
             if (!$deviceId) { http_response_code(400); echo json_encode(['error' => 'Device ID is required']); exit; }
@@ -414,6 +431,11 @@ switch ($action) {
         break;
 
     case 'create_device':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can create devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check license allowance from session
             if (!$_SESSION['can_add_device']) {
@@ -446,6 +468,11 @@ switch ($action) {
         break;
 
     case 'update_device':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can update devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $input['id'] ?? null;
             $updates = $input['updates'] ?? [];
@@ -475,6 +502,11 @@ switch ($action) {
         break;
 
     case 'delete_device':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can delete devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $input['id'] ?? null;
             if (!$id) { http_response_code(400); echo json_encode(['error' => 'Device ID is required']); exit; }
@@ -487,6 +519,11 @@ switch ($action) {
         break;
 
     case 'upload_device_icon':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can upload device icons.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $deviceId = $_POST['id'] ?? null;
             if (!$deviceId || !isset($_FILES['iconFile'])) {

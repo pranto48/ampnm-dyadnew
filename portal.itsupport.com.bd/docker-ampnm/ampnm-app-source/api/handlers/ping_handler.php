@@ -1,8 +1,14 @@
 <?php
 // This file is included by api.php and assumes $pdo, $action, and $input are available.
+$current_user_role = $_SESSION['role'] ?? 'read_user'; // Default to 'read_user'
 
 switch ($action) {
     case 'manual_ping':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can perform manual pings.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $host = $input['host'] ?? '';
             $count = $input['count'] ?? 4; // Use count from input, default to 4
@@ -18,6 +24,11 @@ switch ($action) {
         break;
 
     case 'ping_device':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can ping devices.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = $input['ip'] ?? '';
             if (empty($ip)) {
@@ -31,6 +42,11 @@ switch ($action) {
         break;
 
     case 'scan_network':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can scan networks.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $subnet = $input['subnet'] ?? ''; // e.g., '192.168.1.0/24'
             $devices = scanNetwork($subnet);
@@ -39,6 +55,7 @@ switch ($action) {
         break;
 
     case 'get_ping_history':
+        // All users can view ping history
         $host = $_GET['host'] ?? '';
         $limit = $_GET['limit'] ?? 100;
 

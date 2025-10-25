@@ -8,6 +8,15 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Ensure role is set in session, default to 'read_user' if not explicitly set
+if (!isset($_SESSION['role'])) {
+    $pdo = getDbConnection();
+    $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    $_SESSION['role'] = $user_data['role'] ?? 'read_user';
+}
+
 // --- External License Validation ---
 // This application's license key is now retrieved dynamically from the database.
 // The external verification service URL is defined in config.php (LICENSE_API_URL)

@@ -3,9 +3,15 @@ function initUsers() {
     const usersTableBody = document.getElementById('usersTableBody');
     const usersLoader = document.getElementById('usersLoader');
     const createUserForm = document.getElementById('createUserForm');
+    const currentAdminId = <?php echo $_SESSION['user_id']; ?>; // Get current admin's ID
 
     const api = {
-        get: (action) => fetch(`${API_URL}?action=${action}`).then(res => res.json()),
+        get: (action) => fetch(`${API_URL}?action=${action}`).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => { throw new Error(err.error || `HTTP error! status: ${res.status}`); });
+            }
+            return res.json();
+        }),
         post: (action, body) => fetch(`${API_URL}?action=${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -26,9 +32,19 @@ function initUsers() {
             usersTableBody.innerHTML = users.map(user => `
                 <tr class="border-b border-slate-700">
                     <td class="px-6 py-4 whitespace-nowrap text-white">${user.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${user.id == currentAdminId ? 
+                            `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-500/20 text-blue-400">${user.role.replace(/_/g, ' ').toUpperCase()}</span>` :
+                            `<select class="user-role-select bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs" data-id="${user.id}">
+                                <option value="read_user" ${user.role === 'read_user' ? 'selected' : ''}>Read User</option>
+                                <option value="network_manager" ${user.role === 'network_manager' ? 'selected' : ''}>Network Manager</option>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>`
+                        }
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-400">${new Date(user.created_at).toLocaleString()}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${user.username !== 'admin' ? `<button class="delete-user-btn text-red-500 hover:text-red-400" data-id="${user.id}" data-username="${user.username}"><i class="fas fa-trash mr-2"></i>Delete</button>` : '<span class="text-slate-500">Cannot delete admin</span>'}
+                        ${user.id != currentAdminId ? `<button class="delete-user-btn text-red-500 hover:text-red-400" data-id="${user.id}" data-username="${user.username}"><i class="fas fa-trash mr-2"></i>Delete</button>` : '<span class="text-slate-500">Cannot delete self</span>'}
                     </td>
                 </tr>
             `).join('');
@@ -42,8 +58,9 @@ function initUsers() {
 
     createUserForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = e.target.new_username.value; // Corrected ID to new_username
-        const password = e.target.new_password.value; // Corrected ID to new_password
+        const username = e.target.new_username.value;
+        const password = e.target.new_password.value;
+        const role = e.target.new_role.value; // Get selected role
         if (!username || !password) {
             window.notyf.error('Username and password are required.');
             return;
@@ -54,17 +71,15 @@ function initUsers() {
         button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
 
         try {
-            const result = await api.post('create_user', { username, password });
+            const result = await api.post('create_user', { username, password, role }); // Pass role
             if (result.success) {
                 window.notyf.success('User created successfully.');
                 createUserForm.reset();
                 await loadUsers();
             } else {
-                // This block should now be reached if the API returns an error
                 window.notyf.error(`Error: ${result.error}`);
             }
         } catch (error) {
-            // This block will catch errors thrown by api.post for non-ok responses
             window.notyf.error(error.message || 'An unexpected error occurred.');
             console.error(error);
         } finally {
@@ -73,10 +88,45 @@ function initUsers() {
         }
     });
 
+    usersTableBody.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('user-role-select')) {
+            const selectElement = e.target;
+            const userId = selectElement.dataset.id;
+            const newRole = selectElement.value;
+
+            if (userId == currentAdminId && newRole !== 'admin') {
+                window.notyf.error('You cannot change your own role from admin.');
+                selectElement.value = 'admin'; // Revert selection
+                return;
+            }
+
+            selectElement.disabled = true;
+            try {
+                const result = await api.post('update_user_role', { id: userId, role: newRole });
+                if (result.success) {
+                    window.notyf.success('User role updated successfully.');
+                } else {
+                    window.notyf.error(`Error: ${result.error}`);
+                    await loadUsers(); // Reload to revert if update failed on server
+                }
+            } catch (error) {
+                window.notyf.error(error.message || 'An unexpected error occurred during role update.');
+                console.error(error);
+                await loadUsers(); // Reload to revert if update failed
+            } finally {
+                selectElement.disabled = false;
+            }
+        }
+    });
+
     usersTableBody.addEventListener('click', async (e) => {
         const button = e.target.closest('.delete-user-btn');
         if (button) {
             const { id, username } = button.dataset;
+            if (id == currentAdminId) {
+                window.notyf.error('You cannot delete your own admin account.');
+                return;
+            }
             if (confirm(`Are you sure you want to delete user "${username}"?`)) {
                 try {
                     const result = await api.post('delete_user', { id });

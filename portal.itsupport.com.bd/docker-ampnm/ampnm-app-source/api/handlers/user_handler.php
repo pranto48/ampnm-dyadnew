@@ -19,7 +19,7 @@ switch ($action) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $input['username'] ?? '';
             $password = $input['password'] ?? '';
-            $role = $input['role'] ?? 'user'; // Default to 'user' role
+            $role = $input['role'] ?? 'read_user'; // Default to 'read_user' role
 
             if (empty($username) || empty($password)) {
                 http_response_code(400);
@@ -27,8 +27,8 @@ switch ($action) {
                 exit;
             }
 
-            // Validate role input
-            if (!in_array($role, ['admin', 'user'])) {
+            // Validate role input against the new ENUM values
+            if (!in_array($role, ['admin', 'network_manager', 'read_user'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid role specified.']);
                 exit;
@@ -62,8 +62,8 @@ switch ($action) {
                 exit;
             }
 
-            // Validate role input
-            if (!in_array($new_role, ['admin', 'user'])) {
+            // Validate role input against the new ENUM values
+            if (!in_array($new_role, ['admin', 'network_manager', 'read_user'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid role specified.']);
                 exit;

@@ -1,7 +1,7 @@
 <?php
 // This file is included by api.php and assumes $pdo, $action, and $input are available.
 $current_user_id = $_SESSION['user_id'];
-$current_user_role = $_SESSION['role'] ?? 'user'; // Get current user's role
+$current_user_role = $_SESSION['role'] ?? 'read_user'; // Default to 'read_user'
 
 switch ($action) {
     case 'get_maps':
@@ -13,12 +13,12 @@ switch ($action) {
         break;
 
     case 'create_map':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can create maps.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can create maps
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can create maps.']);
-                exit;
-            }
             $name = $input['name'] ?? ''; $type = $input['type'] ?? 'lan';
             if (empty($name)) { http_response_code(400); echo json_encode(['error' => 'Name is required']); exit; }
             $stmt = $pdo->prepare("INSERT INTO maps (user_id, name, type) VALUES (?, ?, ?)"); $stmt->execute([$current_user_id, $name, $type]);
@@ -29,12 +29,12 @@ switch ($action) {
         break;
 
     case 'update_map':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can update maps.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can update maps
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can update maps.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             $updates = $input['updates'] ?? [];
             if (!$id || empty($updates)) { http_response_code(400); echo json_encode(['error' => 'Map ID and updates are required']); exit; }
@@ -59,12 +59,12 @@ switch ($action) {
         break;
 
     case 'delete_map':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can delete maps.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can delete maps
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can delete maps.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             if (!$id) { http_response_code(400); echo json_encode(['error' => 'Map ID is required']); exit; }
             $stmt = $pdo->prepare("DELETE FROM maps WHERE id = ? AND user_id = ?"); $stmt->execute([$id, $current_user_id]);
@@ -83,12 +83,12 @@ switch ($action) {
         break;
 
     case 'create_edge':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can create connections.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can create edges
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can create connections.']);
-                exit;
-            }
             $sql = "INSERT INTO device_edges (user_id, source_id, target_id, map_id, connection_type) VALUES (?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$current_user_id, $input['source_id'], $input['target_id'], $input['map_id'], $input['connection_type'] ?? 'cat5']);
@@ -101,12 +101,12 @@ switch ($action) {
         break;
 
     case 'update_edge':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can update connections.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can update edges
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can update connections.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             $connection_type = $input['connection_type'] ?? 'cat5';
             if (!$id) { http_response_code(400); echo json_encode(['error' => 'Edge ID is required']); exit; }
@@ -120,12 +120,12 @@ switch ($action) {
         break;
 
     case 'delete_edge':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can delete connections.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can delete edges
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can delete connections.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             if (!$id) { http_response_code(400); echo json_encode(['error' => 'Edge ID is required']); exit; }
             $stmt = $pdo->prepare("DELETE FROM device_edges WHERE id = ? AND user_id = ?");
@@ -135,12 +135,12 @@ switch ($action) {
         break;
     
     case 'import_map':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can import maps.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can import maps
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can import maps.']);
-                exit;
-            }
             $map_id = $input['map_id'] ?? null;
             $devices = $input['devices'] ?? [];
             $edges = $input['edges'] ?? [];
@@ -207,12 +207,12 @@ switch ($action) {
         break;
     
     case 'upload_map_background':
+        if ($current_user_role !== 'admin' && $current_user_role !== 'network_manager') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: Only admin or network managers can upload map backgrounds.']);
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can upload map backgrounds
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can upload map backgrounds.']);
-                exit;
-            }
             $mapId = $_POST['map_id'] ?? null;
             if (!$mapId || !isset($_FILES['backgroundFile'])) {
                 http_response_code(400);

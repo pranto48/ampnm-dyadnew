@@ -45,20 +45,44 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Step 1: Ensure users table exists first with 'role' column
+    // Modified ENUM to include new roles
     $pdo->exec("CREATE TABLE IF NOT EXISTS `users` (
         `id` INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         `username` VARCHAR(50) NOT NULL UNIQUE,
         `password` VARCHAR(255) NOT NULL,
-        `role` ENUM('admin', 'user') DEFAULT 'user' NOT NULL,
+        `role` ENUM('admin', 'network_manager', 'read_user') DEFAULT 'read_user' NOT NULL,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
     message("Table 'users' checked/created successfully.");
 
-    // Migration: Add 'role' column if it doesn't exist
-    // Using the columnExists function from db_helpers.php
-    if (!columnExists($pdo, $dbname, 'users', 'role')) {
-        $pdo->exec("ALTER TABLE `users` ADD COLUMN `role` ENUM('admin', 'user') DEFAULT 'user' NOT NULL AFTER `password`;");
-        message("Migrated 'users' table: added 'role' column.");
+    // Migration: Update 'role' column if it doesn't exist or if ENUM needs modification
+    // This is a more robust way to handle ENUM changes and existing data
+    $current_enum_values = [];
+    $stmt = $pdo->query("SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '$dbname' AND TABLE_NAME = 'users' AND COLUMN_NAME = 'role'");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        preg_match("/^enum\((.*)\)$/", $result['COLUMN_TYPE'], $matches);
+        $current_enum_values = explode(',', str_replace("'", "", $matches[1]));
+    }
+
+    $required_enum_values = ['admin', 'network_manager', 'read_user'];
+    $enum_changed = false;
+    foreach ($required_enum_values as $val) {
+        if (!in_array($val, $current_enum_values)) {
+            $enum_changed = true;
+            break;
+        }
+    }
+    if (count($current_enum_values) !== count($required_enum_values)) {
+        $enum_changed = true;
+    }
+
+    if ($enum_changed) {
+        $pdo->exec("ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'network_manager', 'read_user') DEFAULT 'read_user' NOT NULL;");
+        message("Migrated 'users' table: updated 'role' ENUM to include new roles.");
+        // Migrate existing 'user' roles to 'read_user'
+        $pdo->exec("UPDATE `users` SET `role` = 'read_user' WHERE `role` = 'user';");
+        message("Migrated existing 'user' roles to 'read_user'.");
     }
 
 
