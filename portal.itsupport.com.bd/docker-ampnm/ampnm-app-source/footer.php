@@ -5,6 +5,7 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     <script src="assets/js/shared.js"></script>
+    <script src="assets/js/navbar.js"></script>
     
     <!-- Individual page scripts will be included directly in their respective PHP files -->
     <script>
@@ -21,15 +22,7 @@
         });
 
         // Highlight active navigation link
-        const currentPath = window.location.pathname.split('/').pop();
-        const navLinks = document.querySelectorAll('#main-nav .nav-link');
-        navLinks.forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('bg-slate-700', 'text-cyan-400');
-            } else {
-                link.classList.remove('bg-slate-700', 'text-cyan-400');
-            }
-        });
+        // This part is now largely handled by navbar.js, but keeping the Notyf init here.
     });
     </script>
 </body>

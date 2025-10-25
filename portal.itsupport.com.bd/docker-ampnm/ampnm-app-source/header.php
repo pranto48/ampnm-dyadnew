@@ -27,21 +27,63 @@ if (session_status() === PHP_SESSION_NONE) {
                 </div>
                 <div class="hidden md:block">
                     <div id="main-nav" class="ml-10 flex items-baseline space-x-1">
-                        <!-- Navigation links now point to direct PHP files -->
+                        <!-- Dashboard -->
                         <a href="dashboard.php" class="nav-link"><i class="fas fa-tachometer-alt fa-fw mr-2"></i>Dashboard</a>
-                        <a href="devices.php" class="nav-link"><i class="fas fa-server fa-fw mr-2"></i>Devices</a>
-                        <a href="ping.php" class="nav-link"><i class="fas fa-wifi fa-fw mr-2"></i>Browser Ping</a>
-                        <a href="server_ping.php" class="nav-link"><i class="fas fa-desktop fa-fw mr-2"></i>Server Ping</a>
-                        <a href="network_status.php" class="nav-link"><i class="fas fa-network-wired fa-fw mr-2"></i>Network Status</a>
-                        <a href="network_scanner.php" class="nav-link"><i class="fas fa-search fa-fw mr-2"></i>Network Scanner</a>
-                        <a href="ping_history.php" class="nav-link"><i class="fas fa-history fa-fw mr-2"></i>Ping History</a>
-                        <a href="map.php" class="nav-link"><i class="fas fa-project-diagram fa-fw mr-2"></i>Network Map</a>
-                        <a href="license.php" class="nav-link"><i class="fas fa-key fa-fw mr-2"></i>License</a>
-                        <a href="products.php" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Products</a>
+
+                        <!-- Monitoring Dropdown -->
+                        <div class="relative group">
+                            <button class="nav-link dropdown-toggle">
+                                <i class="fas fa-chart-line fa-fw mr-2"></i>Monitoring
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg hidden">
+                                <a href="devices.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-server fa-fw mr-2"></i>Devices</a>
+                                <a href="ping.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-wifi fa-fw mr-2"></i>Browser Ping</a>
+                                <a href="server_ping.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-desktop fa-fw mr-2"></i>Server Ping</a>
+                                <a href="network_status.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-network-wired fa-fw mr-2"></i>Network Status</a>
+                                <a href="ping_history.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-history fa-fw mr-2"></i>Ping History</a>
+                            </div>
+                        </div>
+
+                        <!-- Network Tools Dropdown -->
+                        <div class="relative group">
+                            <button class="nav-link dropdown-toggle">
+                                <i class="fas fa-tools fa-fw mr-2"></i>Network Tools
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg hidden">
+                                <a href="network_scanner.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-search fa-fw mr-2"></i>Network Scanner</a>
+                                <a href="map.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-project-diagram fa-fw mr-2"></i>Network Map</a>
+                            </div>
+                        </div>
+
+                        <!-- Licensing Dropdown -->
+                        <div class="relative group">
+                            <button class="nav-link dropdown-toggle">
+                                <i class="fas fa-key fa-fw mr-2"></i>Licensing
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg hidden">
+                                <a href="license.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-file-invoice fa-fw mr-2"></i>License Details</a>
+                                <a href="products.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-box-open fa-fw mr-2"></i>Products</a>
+                            </div>
+                        </div>
+
                         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                            <a href="users.php" class="nav-link"><i class="fas fa-users-cog fa-fw mr-2"></i>Users</a>
-                            <a href="maintenance.php" class="nav-link"><i class="fas fa-tools fa-fw mr-2"></i>Maintenance</a>
+                            <!-- Admin Tools Dropdown -->
+                            <div class="relative group">
+                                <button class="nav-link dropdown-toggle">
+                                    <i class="fas fa-user-shield fa-fw mr-2"></i>Admin Tools
+                                    <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                                </button>
+                                <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg hidden">
+                                    <a href="users.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-users-cog fa-fw mr-2"></i>Users</a>
+                                    <a href="maintenance.php" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"><i class="fas fa-tools fa-fw mr-2"></i>Maintenance</a>
+                                </div>
+                            </div>
                         <?php endif; ?>
+
+                        <!-- Logout -->
                         <a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt fa-fw mr-2"></i>Logout</a>
                     </div>
                 </div>
