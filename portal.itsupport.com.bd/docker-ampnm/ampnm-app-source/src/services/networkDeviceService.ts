@@ -1,3 +1,5 @@
+"use client";
+
 const PHP_API_URL = '/api.php'; // Changed to relative path
 
 export interface NetworkDevice {
@@ -80,11 +82,11 @@ export interface FullDashboardData {
   recent_activity: RecentActivity[];
 }
 
-// NEW: User interface
+// NEW: User interface - Updated to reflect all backend roles
 export interface User {
   id: string;
   username: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'network_manager' | 'read_user';
   created_at: string;
 }
 

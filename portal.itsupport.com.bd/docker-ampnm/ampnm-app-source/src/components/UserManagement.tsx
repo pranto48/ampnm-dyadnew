@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<User['role']>('user');
+  const [newUserRole, setNewUserRole] = useState<User['role']>('read_user'); // Default to 'read_user'
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const currentUser = useCurrentUser();
@@ -50,7 +52,7 @@ const UserManagement = () => {
         showSuccess(result.message);
         setNewUsername("");
         setNewPassword("");
-        setNewUserRole('user');
+        setNewUserRole('read_user'); // Reset to default
         fetchUsers();
       } else {
         throw new Error(result.error || "Failed to create user.");
@@ -110,7 +112,7 @@ const UserManagement = () => {
             User Management
           </CardTitle>
           <CardDescription>
-            Manage application users and their roles (admin/user).
+            Manage application users and their roles (admin/network manager/read user).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,11 +148,14 @@ const UserManagement = () => {
                   <div>
                     <Label htmlFor="new-user-role">Role</Label>
                     <Select value={newUserRole} onValueChange={(value: User['role']) => setNewUserRole(value)}>
-                      <SelectTrigger id="new-user-role" className="bg-background border-border text-foreground">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger id="new-user-role" className="bg-background border-border text-foreground">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent className="bg-card text-foreground border-border">
-                        <SelectItem value="user" className="hover:bg-secondary">User</SelectItem>
+                        <SelectItem value="read_user" className="hover:bg-secondary">Read User</SelectItem>
+                        <SelectItem value="network_manager" className="hover:bg-secondary">Network Manager</SelectItem>
                         <SelectItem value="admin" className="hover:bg-secondary">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -193,7 +198,7 @@ const UserManagement = () => {
                               <Users className="h-5 w-5 text-muted-foreground" />
                               <div>
                                 <span className="font-medium text-foreground">{user.username} {isSelf && "(You)"}</span>
-                                <p className="text-xs text-muted-foreground capitalize">Role: {user.role}</p>
+                                <p className="text-xs text-muted-foreground capitalize">Role: {user.role.replace(/_/g, ' ')}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -202,11 +207,12 @@ const UserManagement = () => {
                                 onValueChange={(value: User['role']) => handleUpdateUserRole(user.id, user.username, value)}
                                 disabled={isSelf} // Disable role change for self
                               >
-                                <SelectTrigger className="w-[100px] h-8 text-xs bg-background border-border text-foreground">
+                                <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border text-foreground">
                                   <SelectValue placeholder="Role" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card text-foreground border-border">
-                                  <SelectItem value="user" className="hover:bg-secondary">User</SelectItem>
+                                  <SelectItem value="read_user" className="hover:bg-secondary">Read User</SelectItem>
+                                  <SelectItem value="network_manager" className="hover:bg-secondary">Network Manager</SelectItem>
                                   <SelectItem value="admin" className="hover:bg-secondary">Admin</SelectItem>
                                 </SelectContent>
                               </Select>
