@@ -10,7 +10,12 @@ function initUsers() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
-        }).then(res => res.json())
+        }).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => { throw new Error(err.error || `HTTP error! status: ${res.status}`); });
+            }
+            return res.json();
+        })
     };
 
     const loadUsers = async () => {
@@ -29,6 +34,7 @@ function initUsers() {
             `).join('');
         } catch (error) {
             console.error('Failed to load users:', error);
+            window.notyf.error(error.message || 'Failed to load users.');
         } finally {
             usersLoader.classList.add('hidden');
         }
@@ -36,9 +42,12 @@ function initUsers() {
 
     createUserForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = e.target.username.value;
-        const password = e.target.password.value;
-        if (!username || !password) return;
+        const username = e.target.new_username.value; // Corrected ID to new_username
+        const password = e.target.new_password.value; // Corrected ID to new_password
+        if (!username || !password) {
+            window.notyf.error('Username and password are required.');
+            return;
+        }
 
         const button = createUserForm.querySelector('button[type="submit"]');
         button.disabled = true;
@@ -51,10 +60,12 @@ function initUsers() {
                 createUserForm.reset();
                 await loadUsers();
             } else {
+                // This block should now be reached if the API returns an error
                 window.notyf.error(`Error: ${result.error}`);
             }
         } catch (error) {
-            window.notyf.error('An unexpected error occurred.');
+            // This block will catch errors thrown by api.post for non-ok responses
+            window.notyf.error(error.message || 'An unexpected error occurred.');
             console.error(error);
         } finally {
             button.disabled = false;
@@ -67,12 +78,17 @@ function initUsers() {
         if (button) {
             const { id, username } = button.dataset;
             if (confirm(`Are you sure you want to delete user "${username}"?`)) {
-                const result = await api.post('delete_user', { id });
-                if (result.success) {
-                    window.notyf.success(`User "${username}" deleted.`);
-                    await loadUsers();
-                } else {
-                    window.notyf.error(`Error: ${result.error}`);
+                try {
+                    const result = await api.post('delete_user', { id });
+                    if (result.success) {
+                        window.notyf.success(`User "${username}" deleted.`);
+                        await loadUsers();
+                    } else {
+                        window.notyf.error(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    window.notyf.error(error.message || 'An unexpected error occurred during deletion.');
+                    console.error(error);
                 }
             }
         }
