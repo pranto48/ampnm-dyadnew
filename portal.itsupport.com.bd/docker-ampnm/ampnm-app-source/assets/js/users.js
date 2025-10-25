@@ -62,7 +62,7 @@ function initUsers() {
             e.preventDefault();
             const username = e.target.new_username.value;
             const password = e.target.new_password.value;
-            const role = e.target.new_role.value; // Get selected role
+            const role = e.target.role.value; // Correctly get selected role from the 'role' select element
             if (!username || !password) {
                 window.notyf.error('Username and password are required.');
                 return;
