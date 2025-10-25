@@ -8,6 +8,7 @@ services:
     # The entrypoint is now handled by the Dockerfile itself
     volumes:
       - ./ampnm-app-source/:/var/www/html/ # Mount the application source into the container
+      - ./php.ini:/usr/local/etc/php/conf.d/custom.ini # Mount custom php.ini for debugging
     depends_on:
       db:
         condition: service_healthy
