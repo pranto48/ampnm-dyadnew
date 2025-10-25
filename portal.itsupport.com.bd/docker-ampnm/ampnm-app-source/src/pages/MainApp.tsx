@@ -22,6 +22,7 @@ import {
   BoxOpen, // Added for Products icon
   UserCog, // Added for Users icon
   Tools, // Added for Maintenance icon
+  PlusCircle, // Added for Create New Device button
 } from "lucide-react";
 import PingTest from "@/components/PingTest";
 import NetworkStatus from "@/components/NetworkStatus";
@@ -30,7 +31,7 @@ import ServerPingTest from "@/components/ServerPingTest";
 import PingHistory from "@/components/PingHistory";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import NetworkMap from "@/components/NetworkMap";
-import { getLicenseStatus, LicenseStatus, User } from "@/services/networkDeviceService";
+import { getLicenseStatus, LicenseStatus, User, addDevice, NetworkDevice } from "@/services/networkDeviceService";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardContent from "@/components/DashboardContent";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -39,7 +40,11 @@ import UserManagement from "@/components/UserManagement";
 import DockerUpdate from "@/components/DockerUpdate";
 import Products from "./Products";
 import Maintenance from "./Maintenance";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Ensure Card components are imported
+import { Button } from "@/components/ui/button"; // Ensure Button is imported
+import { Badge } from "@/components/ui/badge"; // Ensure Badge is imported
+import { DeviceEditorDialog } from "@/components/DeviceEditorDialog"; // Import DeviceEditorDialog
+import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
 
 // Helper to get initial tab from URL hash
 const getInitialTab = () => {
@@ -76,10 +81,14 @@ const MainApp = () => {
     license_grace_period_end: null,
     installation_id: "",
   });
-  const [userRole, setUserRole] = useState<User["role"]>("user");
+  const [userRole, setUserRole] = useState<User["role"]>("read_user"); // Default to 'read_user'
   const [isUserRoleLoading, setIsUserRoleLoading] = useState(true);
   const [isLicenseStatusLoading, setIsLicenseStatusLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  // State for DeviceEditorDialog
+  const [isDeviceEditorOpen, setIsDeviceEditorOpen] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Partial<NetworkDevice> | undefined>(undefined);
 
   const fetchLicenseStatus = useCallback(async () => {
     setIsLicenseStatusLoading(true);
@@ -106,17 +115,18 @@ const MainApp = () => {
         const data = await response.json();
         setUserRole(data.role);
       } else {
-        setUserRole('user');
+        setUserRole('read_user'); // Fallback to read_user if API fails
       }
     } catch (error) {
       console.error("Failed to fetch user role:", error);
-      setUserRole('user'); 
+      setUserRole('read_user'); 
     } finally {
       setIsUserRoleLoading(false);
     }
   }, []);
 
   const isAdmin = useMemo(() => userRole === "admin", [userRole]);
+  const canManageDevices = useMemo(() => userRole === "admin" || userRole === "network_manager", [userRole]);
   const isAppLoading = isUserRoleLoading || isLicenseStatusLoading;
 
   useEffect(() => {
@@ -155,6 +165,26 @@ const MainApp = () => {
     console.log("  Can Add Device:", licenseStatus.can_add_device);
     console.log("  License Message:", licenseStatus.license_message);
   }, [userRole, licenseStatus]);
+
+  const handleAddDeviceClick = () => {
+    if (!licenseStatus.can_add_device) {
+      showError(licenseStatus.license_message || 'You have reached your device limit.');
+      return;
+    }
+    setEditingDevice(undefined); // Clear any previous editing state
+    setIsDeviceEditorOpen(true);
+  };
+
+  const handleSaveNewDevice = async (deviceData: Omit<NetworkDevice, 'id' | 'user_id' | 'position_x' | 'position_y' | 'status' | 'last_ping' | 'last_ping_result' | 'map_name' | 'last_ping_output'>) => {
+    try {
+      await addDevice({ ...deviceData, position_x: 0, position_y: 0, map_id: currentMapId }); // Default position and map_id
+      showSuccess('Device added successfully.');
+      fetchDashboardData(); // Refresh the device list
+      fetchLicenseStatus(); // Re-fetch license status to update device count
+    } catch (error: any) {
+      showError(error.message || 'Failed to add device.');
+    }
+  };
 
   if (isAppLoading) {
     return (
@@ -250,9 +280,22 @@ const MainApp = () => {
 
           <TabsContent value="devices">
             <Card>
-              <CardHeader>
-                <CardTitle>Local Network Devices</CardTitle>
-                <CardDescription>Monitor the status of devices on your local network</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Local Network Devices</CardTitle>
+                  <CardDescription>Monitor the status of devices on your local network</CardDescription>
+                </div>
+                {canManageDevices && (
+                  <Button 
+                    onClick={handleAddDeviceClick} 
+                    disabled={!licenseStatus.can_add_device}
+                    title={!licenseStatus.can_add_device ? licenseStatus.license_message : 'Add a new device to your inventory'}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create New Device
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {isDashboardLoading ? (
@@ -394,6 +437,14 @@ const MainApp = () => {
 
         <MadeWithDyad />
       </div>
+
+      {/* Device Editor Dialog */}
+      <DeviceEditorDialog
+        isOpen={isDeviceEditorOpen}
+        onClose={() => setIsDeviceEditorOpen(false)}
+        onSave={handleSaveNewDevice}
+        device={editingDevice} // Will be undefined for new device
+      />
     </div>
   );
 };
