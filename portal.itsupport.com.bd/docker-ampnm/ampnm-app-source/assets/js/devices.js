@@ -23,6 +23,8 @@ function initDevices() {
     let latencyChart = null;
     let availableMaps = []; // Cache maps list
 
+    let currentUserRole = 'read_user'; // Default to read_user
+
     const api = {
         get: (action, params = {}) => fetch(`${API_URL}?action=${action}&${new URLSearchParams(params)}`).then(res => {
             if (!res.ok) {
@@ -37,6 +39,32 @@ function initDevices() {
             return res.json();
         })
     };
+
+    // Fetch user role
+    async function fetchUserRole() {
+        try {
+            const userInfo = await api.get('get_user_info');
+            currentUserRole = userInfo.role;
+            applyRoleBasedVisibility();
+        } catch (error) {
+            console.error("Failed to fetch user role:", error);
+            window.notyf.error("Failed to load user permissions.");
+        }
+    }
+
+    // Apply visibility based on role
+    function applyRoleBasedVisibility() {
+        const canManage = (currentUserRole === 'admin' || currentUserRole === 'network_manager');
+
+        if (createDeviceBtn) createDeviceBtn.style.display = canManage ? '' : 'none';
+        if (importDevicesBtn) importDevicesBtn.style.display = canManage ? '' : 'none';
+        if (exportDevicesBtn) exportDevicesBtn.style.display = canManage ? '' : 'none';
+        if (bulkCheckBtn) bulkCheckBtn.style.display = canManage ? '' : 'none';
+
+        // Re-render devices to update action buttons
+        loadDevices();
+    }
+
 
     const statusClasses = {
         online: 'bg-green-500/20 text-green-400',
@@ -53,6 +81,8 @@ function initDevices() {
         const mapLink = device.map_id ? `<a href="map.php?map_id=${device.map_id}" class="text-cyan-400 hover:underline">${device.map_name}</a>` : '<span class="text-slate-500">Unassigned</span>';
         const viewOnMapLink = device.map_id ? `<a href="map.php?map_id=${device.map_id}&edit_device_id=${device.id}" class="text-cyan-400 hover:text-cyan-300 mr-3" title="View on Map"><i class="fas fa-map-marked-alt"></i></a>` : `<span class="text-slate-600 mr-3" title="Not on a map"><i class="fas fa-map-marked-alt"></i></span>`;
 
+        const canManage = (currentUserRole === 'admin' || currentUserRole === 'network_manager');
+
         return `
             <tr data-id="${device.id}" class="border-b border-slate-700 hover:bg-slate-800/50">
                 <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-white">${device.name}</div><div class="text-sm text-slate-400 capitalize">${device.type}</div></td>
@@ -63,9 +93,11 @@ function initDevices() {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button class="details-device-btn text-blue-400 hover:text-blue-300 mr-3" data-id="${device.id}" title="View Details"><i class="fas fa-chart-line"></i></button>
                     ${viewOnMapLink}
-                    <button class="edit-device-btn text-yellow-400 hover:text-yellow-300 mr-3" data-id="${device.id}" title="Edit Device"><i class="fas fa-edit"></i></button>
-                    <button class="check-device-btn text-green-400 hover:text-green-300 mr-3" data-id="${device.id}" title="Check Status"><i class="fas fa-sync"></i></button>
-                    <button class="delete-device-btn text-red-500 hover:text-red-400" data-id="${device.id}" title="Delete Device"><i class="fas fa-trash"></i></button>
+                    ${canManage ? `
+                        <button class="edit-device-btn text-yellow-400 hover:text-yellow-300 mr-3" data-id="${device.id}" title="Edit Device"><i class="fas fa-edit"></i></button>
+                        <button class="check-device-btn text-green-400 hover:text-green-300 mr-3" data-id="${device.id}" title="Check Status"><i class="fas fa-sync"></i></button>
+                        <button class="delete-device-btn text-red-500 hover:text-red-400" data-id="${device.id}" title="Delete Device"><i class="fas fa-trash"></i></button>
+                    ` : ''}
                 </td>
             </tr>
         `;
@@ -294,79 +326,87 @@ function initDevices() {
         }
     });
 
-    bulkCheckBtn.addEventListener('click', async () => {
-        const icon = bulkCheckBtn.querySelector('i');
-        icon.classList.add('fa-spin');
-        bulkCheckBtn.disabled = true;
-        window.notyf.info('Starting global device status check...');
-    
-        try {
-            const result = await api.post('check_all_devices_globally');
-            if (result.success) {
-                window.notyf.success(`${result.message} ${result.status_changes} status changes detected.`);
-                await loadDevices(); // Refresh the table to show new statuses
-            } else {
-                throw new Error(result.error || 'Unknown error during bulk check.');
-            }
-        } catch (error) {
-            console.error('Bulk check failed:', error);
-            window.notyf.error(error.message || 'Global device check failed.');
-        } finally {
-            icon.classList.remove('fa-spin');
-            bulkCheckBtn.disabled = false;
-        }
-    });
-
-    exportDevicesBtn.addEventListener('click', async () => {
-        try {
-            const devices = await api.get('get_devices');
-            if (devices.length === 0) {
-                window.notyf.error('No devices to export.');
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(devices, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            const date = new Date().toISOString().slice(0, 10);
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `devices_backup_${date}.amp`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            window.notyf.success('All devices exported successfully.');
-        } catch (error) {
-            window.notyf.error(error.message || 'Failed to export devices.');
-            console.error(error);
-        }
-    });
-
-    importDevicesBtn.addEventListener('click', () => importDevicesFile.click());
-
-    importDevicesFile.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (event) => {
+    if (bulkCheckBtn) { // Check if element exists before adding listener
+        bulkCheckBtn.addEventListener('click', async () => {
+            const icon = bulkCheckBtn.querySelector('i');
+            icon.classList.add('fa-spin');
+            bulkCheckBtn.disabled = true;
+            window.notyf.info('Starting global device status check...');
+        
             try {
-                const devices = JSON.parse(event.target.result);
-                if (!Array.isArray(devices)) throw new Error("Invalid file format.");
-
-                if (confirm(`This will add ${devices.length} devices to your inventory. Existing devices will not be affected. Continue?`)) {
-                    const result = await api.post('import_devices', { devices });
-                    if (result.success) {
-                        window.notyf.success(result.message);
-                        await loadDevices();
-                    } else {
-                        throw new Error(result.error);
-                    }
+                const result = await api.post('check_all_devices_globally');
+                if (result.success) {
+                    window.notyf.success(`${result.message} ${result.status_changes} status changes detected.`);
+                    await loadDevices(); // Refresh the table to show new statuses
+                } else {
+                    throw new Error(result.error || 'Unknown error during bulk check.');
                 }
-            } catch (err) {
-                window.notyf.error('Failed to import devices: ' + err.message);
+            } catch (error) {
+                console.error('Bulk check failed:', error);
+                window.notyf.error(error.message || 'Global device check failed.');
+            } finally {
+                icon.classList.remove('fa-spin');
+                bulkCheckBtn.disabled = false;
             }
-        };
-        reader.readAsText(file);
-        importDevicesFile.value = ''; // Reset file input
-    });
+        });
+    }
+
+
+    if (exportDevicesBtn) { // Check if element exists before adding listener
+        exportDevicesBtn.addEventListener('click', async () => {
+            try {
+                const devices = await api.get('get_devices');
+                if (devices.length === 0) {
+                    window.notyf.error('No devices to export.');
+                    return;
+                }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(devices, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                const date = new Date().toISOString().slice(0, 10);
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", `devices_backup_${date}.amp`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                window.notyf.success('All devices exported successfully.');
+            } catch (error) {
+                window.notyf.error(error.message || 'Failed to export devices.');
+                console.error(error);
+            }
+        });
+    }
+
+
+    if (importDevicesBtn) { // Check if element exists before adding listener
+        importDevicesBtn.addEventListener('click', () => importDevicesFile.click());
+        importDevicesFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const devices = JSON.parse(event.target.result);
+                    if (!Array.isArray(devices)) throw new Error("Invalid file format.");
+
+                    if (confirm(`This will add ${devices.length} devices to your inventory. Existing devices will not be affected. Continue?`)) {
+                        const result = await api.post('import_devices', { devices });
+                        if (result.success) {
+                            window.notyf.success(result.message);
+                            await loadDevices();
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    }
+                } catch (err) {
+                    window.notyf.error('Failed to import devices: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            importDevicesFile.value = ''; // Reset file input
+        });
+    }
+
 
     deviceSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
@@ -394,8 +434,12 @@ function initDevices() {
     });
 
     closeDetailsModal.addEventListener('click', () => closeModal('detailsModal'));
-    createDeviceBtn.addEventListener('click', async () => await openDeviceModal());
+    if (createDeviceBtn) createDeviceBtn.addEventListener('click', async () => await openDeviceModal());
     cancelBtn.addEventListener('click', () => closeModal('deviceModal'));
 
-    loadDevices();
+    // Initial load
+    (async () => {
+        await fetchUserRole(); // Fetch user role first
+        await loadDevices();
+    })();
 }

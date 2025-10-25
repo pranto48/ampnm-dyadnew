@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/auth_check.php';
 include __DIR__ . '/header.php';
+
+$current_user_role = $_SESSION['role'] ?? 'read_user';
+$can_manage_maps_devices = ($current_user_role === 'admin' || $current_user_role === 'network_manager');
 ?>
 
 <main id="app">
@@ -10,9 +13,11 @@ include __DIR__ . '/header.php';
                 <h1 class="text-3xl font-bold text-white">Network Map</h1>
                 <div class="flex gap-4">
                     <select id="mapSelector" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 text-white"></select>
-                    <button id="newMapBtn" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"><i class="fas fa-plus mr-2"></i>New Map</button>
-                    <button id="renameMapBtn" class="px-4 py-2 bg-yellow-600/80 text-white rounded-lg hover:bg-yellow-700"><i class="fas fa-edit mr-2"></i>Rename Map</button>
-                    <button id="deleteMapBtn" class="px-4 py-2 bg-red-600/80 text-white rounded-lg hover:bg-red-700"><i class="fas fa-trash mr-2"></i>Delete Map</button>
+                    <?php if ($can_manage_maps_devices): ?>
+                        <button id="newMapBtn" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"><i class="fas fa-plus mr-2"></i>New Map</button>
+                        <button id="renameMapBtn" class="px-4 py-2 bg-yellow-600/80 text-white rounded-lg hover:bg-yellow-700"><i class="fas fa-edit mr-2"></i>Rename Map</button>
+                        <button id="deleteMapBtn" class="px-4 py-2 bg-red-600/80 text-white rounded-lg hover:bg-red-700"><i class="fas fa-trash mr-2"></i>Delete Map</button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -22,7 +27,9 @@ include __DIR__ . '/header.php';
                 <div class="flex items-center justify-between">
                     <h2 id="currentMapName" class="text-xl font-semibold text-white"></h2>
                     <div class="flex items-center gap-2">
-                        <button id="scanNetworkBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Scan Network"><i class="fas fa-search"></i></button>
+                        <?php if ($can_manage_maps_devices): ?>
+                            <button id="scanNetworkBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Scan Network"><i class="fas fa-search"></i></button>
+                        <?php endif; ?>
                         <button id="refreshStatusBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Refresh Device Statuses"><i class="fas fa-sync-alt"></i></button>
                         
                         <div class="flex items-center space-x-2 pl-2 ml-2 border-l border-slate-700">
@@ -33,16 +40,18 @@ include __DIR__ . '/header.php';
                             </label>
                         </div>
 
-                        <div class="pl-2 ml-2 border-l border-slate-700 flex items-center gap-2">
-                            <button id="placeDeviceBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Place Existing Device"><i class="fas fa-download"></i></button>
-                            <button id="addDeviceBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Add New Device"><i class="fas fa-plus"></i></button>
-                            <button id="addEdgeBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Add Connection"><i class="fas fa-project-diagram"></i></button>
-                            <button id="exportBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Export Map"><i class="fas fa-file-export"></i></button>
-                            <button id="importBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Import Map"><i class="fas fa-file-import"></i></button>
-                            <input type="file" id="importFile" class="hidden" accept=".json">
-                            <button id="mapSettingsBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Map Settings"><i class="fas fa-cog"></i></button>
-                            <button id="fullscreenBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Toggle Fullscreen"><i class="fas fa-expand"></i></button>
-                        </div>
+                        <?php if ($can_manage_maps_devices): ?>
+                            <div class="pl-2 ml-2 border-l border-slate-700 flex items-center gap-2">
+                                <button id="placeDeviceBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Place Existing Device"><i class="fas fa-download"></i></button>
+                                <button id="addDeviceBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Add New Device"><i class="fas fa-plus"></i></button>
+                                <button id="addEdgeBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Add Connection"><i class="fas fa-project-diagram"></i></button>
+                                <button id="exportBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Export Map"><i class="fas fa-file-export"></i></button>
+                                <button id="importBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Import Map"><i class="fas fa-file-import"></i></button>
+                                <input type="file" id="importFile" class="hidden" accept=".json">
+                                <button id="mapSettingsBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Map Settings"><i class="fas fa-cog"></i></button>
+                            </div>
+                        <?php endif; ?>
+                        <button id="fullscreenBtn" class="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600" title="Toggle Fullscreen"><i class="fas fa-expand"></i></button>
                     </div>
                 </div>
             </div>
@@ -59,7 +68,9 @@ include __DIR__ . '/header.php';
             <i class="fas fa-map-signs text-slate-600 text-5xl mb-4"></i>
             <h2 class="text-2xl font-bold text-white mb-2">No Network Maps Found</h2>
             <p class="text-slate-400 mb-6">Create a map to start visualizing your network.</p>
-            <button id="createFirstMapBtn" class="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-lg">Create Your First Map</button>
+            <?php if ($can_manage_maps_devices): ?>
+                <button id="createFirstMapBtn" class="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-lg">Create Your First Map</button>
+            <?php endif; ?>
         </div>
     </div>
 

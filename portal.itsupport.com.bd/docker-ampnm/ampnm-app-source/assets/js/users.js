@@ -4,6 +4,7 @@ function initUsers() {
     const usersLoader = document.getElementById('usersLoader');
     const createUserForm = document.getElementById('createUserForm');
     const currentAdminId = <?php echo $_SESSION['user_id']; ?>; // Get current admin's ID
+    const currentUserRole = '<?php echo $_SESSION['role']; ?>'; // Get current user's role
 
     const api = {
         get: (action) => fetch(`${API_URL}?action=${action}`).then(res => {
@@ -35,7 +36,7 @@ function initUsers() {
                     <td class="px-6 py-4 whitespace-nowrap">
                         ${user.id == currentAdminId ? 
                             `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-500/20 text-blue-400">${user.role.replace(/_/g, ' ').toUpperCase()}</span>` :
-                            `<select class="user-role-select bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs" data-id="${user.id}">
+                            `<select class="user-role-select bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs" data-id="${user.id}" ${currentUserRole !== 'admin' ? 'disabled' : ''}>
                                 <option value="read_user" ${user.role === 'read_user' ? 'selected' : ''}>Read User</option>
                                 <option value="network_manager" ${user.role === 'network_manager' ? 'selected' : ''}>Network Manager</option>
                                 <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
@@ -44,7 +45,7 @@ function initUsers() {
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-400">${new Date(user.created_at).toLocaleString()}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${user.id != currentAdminId ? `<button class="delete-user-btn text-red-500 hover:text-red-400" data-id="${user.id}" data-username="${user.username}"><i class="fas fa-trash mr-2"></i>Delete</button>` : '<span class="text-slate-500">Cannot delete self</span>'}
+                        ${user.id != currentAdminId && currentUserRole === 'admin' ? `<button class="delete-user-btn text-red-500 hover:text-red-400" data-id="${user.id}" data-username="${user.username}"><i class="fas fa-trash mr-2"></i>Delete</button>` : '<span class="text-slate-500">Cannot delete self</span>'}
                     </td>
                 </tr>
             `).join('');
@@ -56,37 +57,43 @@ function initUsers() {
         }
     };
 
-    createUserForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = e.target.new_username.value;
-        const password = e.target.new_password.value;
-        const role = e.target.new_role.value; // Get selected role
-        if (!username || !password) {
-            window.notyf.error('Username and password are required.');
-            return;
-        }
-
-        const button = createUserForm.querySelector('button[type="submit"]');
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
-
-        try {
-            const result = await api.post('create_user', { username, password, role }); // Pass role
-            if (result.success) {
-                window.notyf.success('User created successfully.');
-                createUserForm.reset();
-                await loadUsers();
-            } else {
-                window.notyf.error(`Error: ${result.error}`);
+    if (currentUserRole === 'admin') {
+        createUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = e.target.new_username.value;
+            const password = e.target.new_password.value;
+            const role = e.target.new_role.value; // Get selected role
+            if (!username || !password) {
+                window.notyf.error('Username and password are required.');
+                return;
             }
-        } catch (error) {
-            window.notyf.error(error.message || 'An unexpected error occurred.');
-            console.error(error);
-        } finally {
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Create User';
-        }
-    });
+
+            const button = createUserForm.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+
+            try {
+                const result = await api.post('create_user', { username, password, role }); // Pass role
+                if (result.success) {
+                    window.notyf.success('User created successfully.');
+                    createUserForm.reset();
+                    await loadUsers();
+                } else {
+                    window.notyf.error(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                window.notyf.error(error.message || 'An unexpected error occurred.');
+                console.error(error);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Create User';
+            }
+        });
+    } else {
+        // Hide the create user form if not admin
+        createUserForm.closest('.bg-slate-800').style.display = 'none';
+    }
+
 
     usersTableBody.addEventListener('change', async (e) => {
         if (e.target.classList.contains('user-role-select')) {
