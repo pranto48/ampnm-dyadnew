@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -145,6 +147,15 @@ const MainApp = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Log debug info to console
+  useEffect(() => {
+    console.log("Debug Info:");
+    console.log("  User Role:", userRole);
+    console.log("  License Status Code:", licenseStatus.license_status_code);
+    console.log("  Can Add Device:", licenseStatus.can_add_device);
+    console.log("  License Message:", licenseStatus.license_message);
+  }, [userRole, licenseStatus]);
+
   if (isAppLoading) {
     return (
       <div className="flex w-full flex-col items-center justify-center min-h-[80vh]">
@@ -158,10 +169,12 @@ const MainApp = () => {
   return (
     <div className="flex w-full flex-col">
       <div className="flex-1 space-y-4 p-4 pt-6 sm:p-8">
-        {/* Temporary debug display for user role */}
-        {/* <div className="bg-blue-500/20 text-blue-300 p-2 rounded-md text-sm mb-4">
-          Debug: Current User Role is <span className="font-bold capitalize">{userRole}</span>
-        </div> */}
+        {/* Temporary debug display for user role and license status */}
+        <div className="bg-blue-500/20 text-blue-300 p-2 rounded-md text-sm mb-4">
+          Debug: Current User Role: <span className="font-bold capitalize">{userRole}</span> | 
+          License Status: <span className="font-bold capitalize">{licenseStatus.license_status_code}</span> |
+          Can Add Device: <span className="font-bold capitalize">{licenseStatus.can_add_device ? 'Yes' : 'No'}</span>
+        </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="flex flex-wrap h-auto p-1">
