@@ -24,8 +24,18 @@ function initDevices() {
     let availableMaps = []; // Cache maps list
 
     const api = {
-        get: (action, params = {}) => fetch(`${API_URL}?action=${action}&${new URLSearchParams(params)}`).then(res => res.json()),
-        post: (action, body = {}) => fetch(`${API_URL}?action=${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(res => res.json())
+        get: (action, params = {}) => fetch(`${API_URL}?action=${action}&${new URLSearchParams(params)}`).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => { throw new Error(err.error || `HTTP error! status: ${res.status}`); });
+            }
+            return res.json();
+        }),
+        post: (action, body = {}) => fetch(`${API_URL}?action=${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => { throw new Error(err.error || `HTTP error! status: ${res.status}`); });
+            }
+            return res.json();
+        })
     };
 
     const statusClasses = {
@@ -141,7 +151,7 @@ function initDevices() {
             closeModal('deviceModal');
             loadDevices();
         } catch (error) {
-            window.notyf.error('Failed to save device.');
+            window.notyf.error(error.message || 'Failed to save device.');
         }
     });
 
@@ -248,8 +258,12 @@ function initDevices() {
         }
 
         if (button.classList.contains('edit-device-btn')) {
-            const deviceDetails = await api.get('get_device_details', { id: deviceId });
-            await openDeviceModal(deviceDetails.device);
+            try {
+                const deviceDetails = await api.get('get_device_details', { id: deviceId });
+                await openDeviceModal(deviceDetails.device);
+            } catch (error) {
+                window.notyf.error(error.message || 'Failed to load device details for editing.');
+            }
         }
 
         if (button.classList.contains('check-device-btn')) {
@@ -259,16 +273,23 @@ function initDevices() {
             try {
                 await api.post('check_device', { id: deviceId });
                 await loadDevices();
-            } catch (error) { console.error('Failed to check device:', error); }
+            } catch (error) { 
+                console.error('Failed to check device:', error); 
+                window.notyf.error(error.message || 'Failed to check device.');
+            }
             finally { button.disabled = false; icon.classList.remove('fa-spin'); }
         }
 
         if (button.classList.contains('delete-device-btn')) {
             if (confirm('Are you sure you want to delete this device?')) {
-                await api.post('delete_device', { id: deviceId });
-                window.notyf.success('Device deleted successfully.');
-                row.remove();
-                if (devicesTableBody.children.length === 0) noDevicesMessage.classList.remove('hidden');
+                try {
+                    await api.post('delete_device', { id: deviceId });
+                    window.notyf.success('Device deleted successfully.');
+                    row.remove();
+                    if (devicesTableBody.children.length === 0) noDevicesMessage.classList.remove('hidden');
+                } catch (error) {
+                    window.notyf.error(error.message || 'Failed to delete device.');
+                }
             }
         }
     });
@@ -289,7 +310,7 @@ function initDevices() {
             }
         } catch (error) {
             console.error('Bulk check failed:', error);
-            window.notyf.error('Global device check failed.');
+            window.notyf.error(error.message || 'Global device check failed.');
         } finally {
             icon.classList.remove('fa-spin');
             bulkCheckBtn.disabled = false;
@@ -313,7 +334,7 @@ function initDevices() {
             downloadAnchorNode.remove();
             window.notyf.success('All devices exported successfully.');
         } catch (error) {
-            window.notyf.error('Failed to export devices.');
+            window.notyf.error(error.message || 'Failed to export devices.');
             console.error(error);
         }
     });

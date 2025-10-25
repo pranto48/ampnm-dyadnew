@@ -93,11 +93,6 @@ function logStatusChange($pdo, $deviceId, $oldStatus, $newStatus, $details) {
 switch ($action) {
     case 'import_devices':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can import devices
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can import devices.']);
-                exit;
-            }
             // Check license allowance from session
             if (!$_SESSION['can_add_device']) {
                 http_response_code(403);
@@ -420,11 +415,6 @@ switch ($action) {
 
     case 'create_device':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can create devices
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can create devices.']);
-                exit;
-            }
             // Check license allowance from session
             if (!$_SESSION['can_add_device']) {
                 http_response_code(403);
@@ -457,11 +447,6 @@ switch ($action) {
 
     case 'update_device':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can update devices
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can update devices.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             $updates = $input['updates'] ?? [];
             if (!$id || empty($updates)) { http_response_code(400); echo json_encode(['error' => 'Device ID and updates are required']); exit; }
@@ -491,11 +476,6 @@ switch ($action) {
 
     case 'delete_device':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can delete devices
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can delete devices.']);
-                exit;
-            }
             $id = $input['id'] ?? null;
             if (!$id) { http_response_code(400); echo json_encode(['error' => 'Device ID is required']); exit; }
             $stmt = $pdo->prepare("DELETE FROM devices WHERE id = ? AND user_id = ?"); $stmt->execute([$id, $current_user_id]);
@@ -508,11 +488,6 @@ switch ($action) {
 
     case 'upload_device_icon':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($current_user_role !== 'admin') { // Only admin can upload device icons
-                http_response_code(403);
-                echo json_encode(['error' => 'Forbidden: Only admin users can upload device icons.']);
-                exit;
-            }
             $deviceId = $_POST['id'] ?? null;
             if (!$deviceId || !isset($_FILES['iconFile'])) {
                 http_response_code(400);
